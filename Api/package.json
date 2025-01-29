@@ -1,0 +1,17 @@
+{
+  "name": "api",
+  "version": "0.0.1",
+  "description": "",
+  "main": "server.js",
+  "dependencies": {
+    "dotenv": "^16.4.7",
+    "http": "^0.0.1-security",
+    "uuid": "^11.0.5"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node server.js"
+  },
+  "author": "Chetan Pal <cchetanpl@gmail.com>",
+  "license": "ISC"
+}
