@@ -1,54 +1,74 @@
-import React, { useEffect, useState } from 'react';
-import { QrReader } from 'react-qr-reader';
+import React, { useEffect, useRef, useState } from 'react';
+import { BrowserMultiFormatReader } from '@zxing/library';
 
-const QRCodeScanner: React.FC = () => {
-  const [data, setData] = useState<string>('No result');
-  const [facingMode, setFacingMode] = useState<'environment' | 'user'>('environment');
+const QRScanner: React.FC = () => {
+  const [qrResult, setQrResult] = useState<string>('No result');
+  const [facingMode, setFacingMode] = useState<'user' | 'environment'>('environment');
+  const videoRef = useRef<HTMLVideoElement>(null);
+  const codeReader = useRef<BrowserMultiFormatReader | null>(null);
 
-  const handleScan = (result: any, error: any) => {
-    if (result) {
-      setData(result.text || 'No result');
-    }
-    if (error && error.name !== 'NotFoundException') {
-      console.error('QR Scan Error:', error);
-    }
-  };
-
-  const toggleFacingMode = () => {
-    setFacingMode(prev => (prev === 'environment' ? 'user' : 'environment'));
-  };
-
-  // Ensure video attributes are set after mounting
-  useEffect(() => {
-    const interval = setInterval(() => {
-      const videoElement = document.querySelector('video');
-      if (videoElement) {
-        videoElement.setAttribute('autoplay', 'true');
-        videoElement.setAttribute('muted', 'true');
-        videoElement.setAttribute('playsinline', 'true');
-        clearInterval(interval);
+  const startScan = async () => {
+    try {
+      if (!codeReader.current) {
+        codeReader.current = new BrowserMultiFormatReader();
       }
-    }, 500);
-    return () => clearInterval(interval);
-  }, []);
+
+      const videoElement = videoRef.current;
+      if (videoElement) {
+        // Get the list of available video devices
+        const devices = await navigator.mediaDevices.enumerateDevices();
+        const videoDevices = devices.filter(device => device.kind === 'videoinput');
+
+        // Select the appropriate camera based on facingMode
+        let selectedDeviceId = videoDevices[0]?.deviceId; // Default to the first camera
+        if (videoDevices.length > 1) {
+          selectedDeviceId = videoDevices.find(device =>
+            facingMode === 'user' ? device.label.toLowerCase().includes('front') :
+                                    device.label.toLowerCase().includes('back')
+          )?.deviceId || selectedDeviceId;
+        }
+
+        await codeReader.current.decodeFromVideoDevice(
+          selectedDeviceId,
+          videoElement,
+          (result, error) => {
+            if (result) {
+              setQrResult(result.getText());
+              console.log(result.getText());
+            }
+          }
+        );
+      }
+    } catch (error) {
+      console.error('Error starting scanner:', error);
+    }
+  };
+
+  useEffect(() => {
+    startScan();
+
+    return () => {
+      codeReader.current?.reset();
+    };
+  }, [facingMode]); // Re-run when facingMode changes
+
+  const flipCamera = () => {
+    setFacingMode(prev => {
+      const newFacingMode = prev === 'user' ? 'environment' : 'user';
+      console.log(`Switching camera from ${prev} to ${newFacingMode}`);
+      return newFacingMode;
+    });
+  };
+  
 
   return (
     <div>
-      <button onClick={toggleFacingMode}>Switch Camera</button>
-      <div style={{ width: '100%', height: 'auto' }}>
-        <QrReader
-          onResult={handleScan}
-          constraints={{
-            facingMode: facingMode,
-            width: { ideal: 1280 },
-            height: { ideal: 720 }
-          }}
-          scanDelay={1000}
-        />
-      </div>
-      <p>{data}</p>
+      <h2>QR Code Scanner</h2>
+      <video ref={videoRef} style={{ width: '100%' }} />
+      <p>Scan result: {qrResult}</p>
+      <button onClick={flipCamera}>Flip Camera</button>
     </div>
   );
 };
 
-export default QRCodeScanner;
+export default QRScanner;
