@@ -59,25 +59,34 @@ const server = http.createServer((req, res) => {
     req.on("data", (chunk) => {
       body += chunk.toString();
     });
-
-    req.on("end", () => {
-      const task = tasks.find((t) => t.id === id);
-      if (!task) {
-        sendResponse(res, 404, { error: error_messages.ToDo.TASK_NOT_FOUND });
-        return;
-      }
-
-      task.completed = true;
-      sendResponse(res, 200, task);
-    });
-
-  // Handle DELETE /tasks
-  } else if (method === "DELETE" && url === "/tasks") {
+  }
+    else if (method === "DELETE" && url === "/tasks") {
     tasks = [];
     sendResponse(res, 204, null);
 
   // Handle 404 Not Found
-  } else {
+  } 
+
+  else if (method === "DELETE" && url.startsWith("/tasks/single")) {
+    try{
+    const id = url.split("/")[3];
+    const result=  tasks.filter((taskId)=> {
+     console.log(id);
+     return  taskId.id!==id;
+    });
+    tasks=result;
+    sendResponse(res, 200, tasks);
+  }
+  catch(res){
+    console.log(res);
+  }
+  //  sendResponse(res, 204, null);
+
+  // Handle 404 Not Found
+  } 
+
+  
+  else {
     sendResponse(res, 404, { error: error_messages.ToDo.ROUTE_NOT_FOUND});
   }
 });

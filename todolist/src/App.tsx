@@ -69,6 +69,17 @@ const Todo: React.FC = () => {
       console.error('Error deleting tasks:', error);
     }
   };
+// delete single task
+ const removeTask = async (id:string) => {
+  debugger;
+  try {
+    const url= `${apiBaseUrl}/tasks/single/${id}`;
+    const response = await axios.delete(url);
+    setTasks(response.data);
+  } catch (error) {
+    console.error('Error deleting tasks:', error);
+  }
+};
 
 
   return (
@@ -88,6 +99,9 @@ const Todo: React.FC = () => {
             {task.title}
             <div>
               <TodoButton onClick={() => completeTask(task.id)}>Complete</TodoButton>
+            </div>
+              <div>
+              <TodoButton onClick={() => removeTask(task.id)}>Remove Me!</TodoButton>
             </div>
           </TodoItem>
         ))}
