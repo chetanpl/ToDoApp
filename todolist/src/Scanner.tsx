@@ -79,8 +79,7 @@ const QRScanner: React.FC = () => {
       <h2>QR Code Scanner</h2>
       <div style={{width:'400px', height:'400px', textAlign:'center'}}>
       <video ref={videoRef} style={{ width: '100%' }} />
-      </div> <p>Scan result: {qrResult}</p>
-      <button onClick={flipCamera}>Flip Camera</button>
+     
       <div>
       <h2>Available Cameras</h2>
       <ul>
@@ -89,6 +88,8 @@ const QRScanner: React.FC = () => {
         ))}
       </ul>
     </div>
+    </div> <p>Scan result: {qrResult}</p>
+    <button onClick={flipCamera}>Flip Camera</button>
     </div>
   );
 };
