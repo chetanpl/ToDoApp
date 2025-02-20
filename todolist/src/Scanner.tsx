@@ -6,7 +6,7 @@ const QRScanner: React.FC = () => {
   const [facingMode, setFacingMode] = useState<'user' | 'environment'>('environment');
   const videoRef = useRef<HTMLVideoElement>(null);
   const codeReader = useRef<BrowserMultiFormatReader | null>(null);
-
+  const [cameras, setCameras] = useState<{ label: string; deviceId: string }[]>([]);
   const startScan = async () => {
     try {
       if (!codeReader.current) {
@@ -18,7 +18,7 @@ const QRScanner: React.FC = () => {
         // Get the list of available video devices
         const devices = await navigator.mediaDevices.enumerateDevices();
         const videoDevices = devices.filter(device => device.kind === 'videoinput');
-
+       
         // Select the appropriate camera based on facingMode
         let selectedDeviceId = videoDevices[0]?.deviceId; // Default to the first camera
         if (videoDevices.length > 1) {
@@ -51,6 +51,19 @@ const QRScanner: React.FC = () => {
       codeReader.current?.reset();
     };
   }, [facingMode]); // Re-run when facingMode changes
+  
+  useEffect(() => {
+    const getCameras = async () => {
+      const devices = await navigator.mediaDevices.enumerateDevices();
+      const videoDevices = devices
+        .filter(device => device.kind === 'videoinput')
+        .map(device => ({ label: device.label || `Camera ${cameras.length + 1}`, deviceId: device.deviceId }));
+
+      setCameras(videoDevices);
+    };
+
+    getCameras();
+  }, []);
 
   const flipCamera = () => {
     setFacingMode(prev => {
@@ -64,9 +77,18 @@ const QRScanner: React.FC = () => {
   return (
     <div>
       <h2>QR Code Scanner</h2>
+      <div style={{width:'400px', height:'400px', textAlign:'center'}}>
       <video ref={videoRef} style={{ width: '100%' }} />
-      <p>Scan result: {qrResult}</p>
+      </div> <p>Scan result: {qrResult}</p>
       <button onClick={flipCamera}>Flip Camera</button>
+      <div>
+      <h2>Available Cameras</h2>
+      <ul>
+        {cameras.map((camera, index) => (
+          <li key={camera.deviceId}>{index + 1}. {camera.label}</li>
+        ))}
+      </ul>
+    </div>
     </div>
   );
 };
