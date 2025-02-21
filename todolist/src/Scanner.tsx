@@ -1,98 +1,63 @@
-import React, { useEffect, useRef, useState } from 'react';
-import { BrowserMultiFormatReader } from '@zxing/library';
+import React, { useState, useEffect } from 'react';
+import { QrReader } from 'react-qr-reader';
 
-const QRScanner: React.FC = () => {
-  const [qrResult, setQrResult] = useState<string>('No result');
-  const [facingMode, setFacingMode] = useState<'user' | 'environment'>('environment');
-  const videoRef = useRef<HTMLVideoElement>(null);
-  const codeReader = useRef<BrowserMultiFormatReader | null>(null);
-  const [cameras, setCameras] = useState<{ label: string; deviceId: string }[]>([]);
-  const startScan = async () => {
-    try {
-      if (!codeReader.current) {
-        codeReader.current = new BrowserMultiFormatReader();
-      }
+const QRCodeScanner: React.FC = () => {
+  const [videoConstraints, setVideoConstraints] = useState({
+    facingMode: 'user' as string | {exact:string}
+  });
+  const [scannerResult, setscannerResult] = useState();
 
-      const videoElement = videoRef.current;
-      if (videoElement) {
-        // Get the list of available video devices
-        const devices = await navigator.mediaDevices.enumerateDevices();
-        const videoDevices = devices.filter(device => device.kind === 'videoinput');
-       
-        // Select the appropriate camera based on facingMode
-        let selectedDeviceId = videoDevices[0]?.deviceId; // Default to the first camera
-        if (videoDevices.length > 1) {
-          selectedDeviceId = videoDevices.find(device =>
-            facingMode === 'user' ? device.label.toLowerCase().includes('front') :
-                                    device.label.toLowerCase().includes('back')
-          )?.deviceId || selectedDeviceId;
-        }
 
-        await codeReader.current.decodeFromVideoDevice(
-          selectedDeviceId,
-          videoElement,
-          (result, error) => {
-            if (result) {
-              setQrResult(result.getText());
-              console.log(result.getText());
-            }
-          }
-        );
-      }
-    } catch (error) {
-      console.error('Error starting scanner:', error);
+ 
+  const qrCodeResult = (result: any, error: any) => {
+    if (result) {
+      setscannerResult(result?.text || 'No result');
+    }
+    
+    if (error) {
     }
   };
 
-  useEffect(() => {
-    startScan();
-
-    return () => {
-      codeReader.current?.reset();
-    };
-  }, [facingMode]); // Re-run when facingMode changes
-  
-  useEffect(() => {
-    const getCameras = async () => {
-      const devices = await navigator.mediaDevices.enumerateDevices();
-      const videoDevices = devices
-        .filter(device => device.kind === 'videoinput')
-        .map(device => ({ label: device.label || `Camera ${cameras.length + 1}`, deviceId: device.deviceId }));
-
-      setCameras(videoDevices);
-    };
-
-    getCameras();
-  }, []);
-
-  const flipCamera = () => {
-    setFacingMode(prev => {
-      const newFacingMode = prev === 'user' ? 'environment' : 'user';
-      console.log(`Switching camera from ${prev} to ${newFacingMode}`);
-      return newFacingMode;
+  const updateFacingMode = () => {
+    setVideoConstraints(prev => {
+      const newFacingMode = prev.facingMode === 'user'?{exact:'environment'} : 'user';
+      return {
+        ...prev,
+        facingMode: newFacingMode
+      };
     });
   };
-  
+
+  const contrants: MediaTrackConstraints = {
+    facingMode: videoConstraints.facingMode as ConstrainDOMString,
+  };
 
   return (
-    <div>
-      <button onClick={flipCamera}>{facingMode === 'user' ?'Front':'Back'} Flip Camera</button>
-      <h2>QR Code Scanner</h2>
-      <div style={{width:'400px', height:'400px', textAlign:'center'}}>
-      <video ref={videoRef} style={{ width: '100%' }} />
-     
-      <div>
-      <h2>Available Cameras</h2>
-      <ul>
-        {cameras.map((camera, index) => (
-          <li key={camera.deviceId}>{index + 1}. {camera.label}</li>
-        ))}
-      </ul>
-    </div>
-    </div> <p>Scan result: {qrResult}</p>
-    
+    <div style={{ width: '100%', maxWidth: '500px', margin: '0 auto' }}>
+      <button 
+        onClick={updateFacingMode}
+        style={{ marginBottom: '1rem' }}
+      >
+        Switch Camera ({videoConstraints.facingMode === 'user' ? 'Front' : 'Back'})
+      </button>
+      
+      <div style={{
+        position: 'relative',
+        width: '100%',
+        height: '300px', // Adjust the height of the video view
+        overflow: 'hidden',
+        borderRadius: '8px',
+      }}>
+        {JSON.stringify(contrants)}
+          <QrReader
+            onResult={qrCodeResult}
+            constraints={contrants}
+          />
+      </div>
+      
+      <p style={{ marginTop: '1rem', textAlign: 'center' }}>{scannerResult  }</p>
     </div>
   );
 };
 
-export default QRScanner;
+export default QRCodeScanner;
