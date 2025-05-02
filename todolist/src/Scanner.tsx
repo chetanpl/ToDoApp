@@ -63,8 +63,8 @@ const QRScanner: React.FC = () => {
     //     deviceId: device.deviceId,
     //   }));
   
-    // // Filter out duplicates by ensuring unique deviceId and label
-    // const uniqueDevices = Array.from(
+    // Filter out duplicates by ensuring unique deviceId and label
+    // const uniqueDevices = Arsray.from(
     //   new Map(videoDevices.map(device => [`${device.deviceId}-${device.label}`, device])).values()
     // );
     // const videoDevices = devices
@@ -73,6 +73,7 @@ const QRScanner: React.FC = () => {
     //   label: device.label || "Unknown Camera",
     //   deviceId: device.deviceId
     // }));
+   // setCameras(videoDevices);
     const videoDevices = await Promise.all(
       devices.filter(device => device.kind === 'videoinput')
         .map(async device => {
@@ -88,12 +89,16 @@ const QRScanner: React.FC = () => {
         })
     );
 
-    setCameras(videoDevices.filter((device): device is { label: string; deviceId: string } => !!device));
+   setCameras(videoDevices.filter((device): device is { label: string; deviceId: string } => !!device));
 
   };
 
   React.useEffect(() => {
-    getCameras();
+    const fetchCameras = async () => {
+      await navigator.mediaDevices.getUserMedia({ video: true });
+      getCameras();
+    };
+    fetchCameras();
   }, []);
 
   return (
