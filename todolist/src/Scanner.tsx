@@ -56,7 +56,7 @@ const QRScanner: React.FC = () => {
 
   const getCameras = async () => {
     const devices = await navigator.mediaDevices.enumerateDevices();
-    // const videoDevices = devices
+        // const videoDevices = devices
     //   .filter(device => device.kind === 'videoinput')
     //   .map((device, index) => ({
     //     label: device.label || `Camera ${index + 1}`,
@@ -94,11 +94,21 @@ const QRScanner: React.FC = () => {
   };
 
   React.useEffect(() => {
+    let stream : MediaStream | null= null;
     const fetchCameras = async () => {
-      await navigator.mediaDevices.getUserMedia({ video: true });
+      stream= await navigator.mediaDevices.getUserMedia({ video: true });
       getCameras();
+      if(stream){
+        stream.getTracks().forEach(track=>track.stop());
+      }
     };
     fetchCameras();
+    return()=>{
+      codeReader.current?.reset();
+      if(stream){
+        stream.getTracks().forEach(track=>track.stop());
+      }
+    }
   }, []);
 
   return (
