@@ -33,7 +33,7 @@ const QRScanner: React.FC = () => {
             }
           }
         );
-         setIsCameraActive(true); // Activate the camera
+        // setIsCameraActive(true); // Activate the camera
       }
     } catch (error) {
       console.error('Error starting scanner:', error);
@@ -42,16 +42,16 @@ const QRScanner: React.FC = () => {
 
   const stopScan = () => {
     codeReader.current?.reset();
-     setIsCameraActive(false); // Deactivate the camera
+    // setIsCameraActive(false); // Deactivate the camera
   };
 
   const flipCamera = async () => {
     const nextCameraIndex = (currentCameraIndex + 1) % cameras.length;
     setCurrentCameraIndex(nextCameraIndex);
     console.log(`Switched to camera index: ${nextCameraIndex}`);
-     if (isCameraActive) {
+    // if (isCameraActive) {
       await startScan(nextCameraIndex); // Automatically start scanning with the new camera
-     }
+    // }
   };
 
   const getCameras = async () => {
